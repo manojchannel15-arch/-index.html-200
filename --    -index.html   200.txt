@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Manoj Guna Pro - Official Elite Social</title>
+    
+    <!-- Firebase Engine (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
+    <!-- UI Resources -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root { --mg-purple: #8B5CF6; --mg-blue: #3B82F6; --mg-dark: #09090b; --mg-card: #121215; }
+        body { background: var(--mg-dark); color: white; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        
+        /* Premium Page Transitions */
+        .page { display: none; min-height: 100vh; padding-top: 80px; padding-bottom: 110px; }
+        .active { display: block !important; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Premium Nav Bar */
+        .mg-nav { background: rgba(10,10,14,0.98); backdrop-filter: blur(25px); border-top: 1px solid rgba(255,255,255,0.06); position: fixed; bottom: 0; width: 100%; height: 85px; display: flex; justify-content: space-around; align-items: center; z-index: 5000; }
+        .mg-center-btn { background: linear-gradient(135deg, var(--mg-purple), var(--mg-blue)); width: 62px; height: 62px; border-radius: 22px; display: flex; align-items: center; justify-content: center; position: relative; top: -25px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.5); transform: rotate(45deg); transition: 0.3s; }
+        .mg-center-btn i { transform: rotate(-45deg); font-size: 26px; color: white; }
+
+        /* VIP Components */
+        .mg-card { background: var(--mg-card); border-radius: 30px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+        .glow-btn { background: linear-gradient(90deg, var(--mg-purple), var(--mg-blue)); font-weight: 900; padding: 18px; border-radius: 20px; width: 100%; box-shadow: 0 0 25px rgba(139, 92, 246, 0.4); transition: 0.3s; }
+        .glow-btn:active { transform: scale(0.96); }
+        
+        /* Locked System UI */
+        .locked-btn { background: #1c1c21; color: #555; border: 1px solid #333; cursor: not-allowed; }
+        .unlocked-btn { background: linear-gradient(90deg, #22c55e, #10b981); color: white; box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
+
+        /* Inputs */
+        input, textarea { background: #1a1a20 !important; border: 1px solid #2d2d35 !important; color: white !important; border-radius: 18px !important; padding: 16px !important; width: 100%; outline: none; margin-bottom: 12px; }
+        .blue-tick { color: #0095f6; font-size: 16px; margin-left: 5px; }
+        
+        /* Profile UI */
+        .profile-header { width: 100%; height: 180px; background: #1a1a22; position: relative; overflow: hidden; }
+        .profile-dp { width: 115px; height: 115px; border-radius: 40px; border: 5px solid var(--mg-dark); position: absolute; bottom: -50px; left: 25px; background: #222; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+    <!-- 🔐 1. AUTH SCREEN -->
+    <div id="auth-screen" class="fixed inset-0 z-[9999] bg-[#09090b] flex items-center justify-center p-8">
+        <div class="w-full max-w-sm text-center">
+            <h1 class="text-5xl font-black italic tracking-tighter mb-2">MG <span class="text-purple-500">PRO</span></h1>
+            <p class="text-gray-600 text-[10px] font-bold uppercase tracking-[5px] mb-12">Manoj Guna Elite System</p>
+            <div class="space-y-4">
+                <input id="auth-email" type="email" placeholder="Email Address">
+                <input id="auth-pass" type="password" placeholder="Password (Min 6)">
+                <button onclick="handleAuth('login')" class="glow-btn">LOGIN TO MG SYSTEM</button>
+                <button onclick="handleAuth('signup')" class="text-gray-500 text-xs font-bold mt-6 underline">CREATE NEW ID</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎊 2. MONETIZATION POPUP -->
+    <div id="bonus-modal" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-8 bg-black/98 backdrop-blur-2xl">
+        <div class="mg-card p-12 text-center border-t-8 border-purple-600">
+            <i class="fa-solid fa-crown text-7xl text-yellow-500 mb-6 drop-shadow-2xl"></i>
+            <h2 class="text-3xl font-black mb-4 uppercase italic">ID Verified!</h2>
+            <p class="text-gray-400 mb-10 font-medium">Badhai Ho! Manoj Guna Pro has verified your ID. <br><b class="text-green-400 text-lg">₹2000 Bonus</b> and <b class="text-blue-400">Blue Tick</b> active!</p>
+            <button onclick="document.getElementById('bonus-modal').classList.add('hidden')" class="glow-btn">START EARNING</button>
+        </div>
+    </div>
+
+    <!-- 📱 3. TOP HEADER -->
+    <header class="fixed top-0 w-full z-[1000] bg-[#09090b]/90 backdrop-blur-xl px-6 py-4 flex justify-between items-center border-b border-white/5">
+        <span class="text-2xl font-black italic tracking-tighter">MG <span class="text-purple-500">PRO</span></span>
+        <div class="flex items-center gap-6">
+            <i class="fa-solid fa-magnifying-glass text-gray-400 text-xl" onclick="showPage('search-page')"></i>
+            <div class="relative" onclick="alert('Comment aur Follow notifications yahan dikhenge!')">
+                <i class="fa-solid fa-bell text-gray-400 text-xl"></i>
+                <div id="notif-dot" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-black"></div>
+            </div>
+            <img id="h-dp" src="https://via.placeholder.com/100" class="w-10 h-10 rounded-2xl border-2 border-purple-500 object-cover shadow-lg" onclick="showPage('profile')">
+        </div>
+    </header>
+
+    <main>
+        <!-- HOME FEED + ADMIN BANNER -->
+        <section id="home" class="page active px-4">
+            <div class="w-full h-48 rounded-[35px] bg-[#1a1a22] mb-8 border border-white/10 overflow-hidden shadow-2xl relative">
+                <img id="admin-banner" src="https://via.placeholder.com/800x400?text=Manoj+Guna+Premium+Banner" class="w-full h-full object-cover">
+            </div>
+            <div id="feed" class="space-y-8">
+                <p class="text-center text-gray-800 py-10 font-bold italic">Machine Loading Dhamaaka Feed...</p>
+            </div>
+        </section>
+
+        <!-- SEARCH PAGE -->
+        <section id="search-page" class="page px-6">
+            <h2 class="text-2xl font-black mb-6">Search Creators</h2>
+            <input type="text" id="user-search" onkeyup="searchUsers()" placeholder="Naam search karein...">
+            <div id="search-results" class="space-y-4 mt-6"></div>
+        </section>
+
+        <!-- UPLOAD PHOTO SECTION -->
+        <section id="upload" class="page px-6">
+            <div class="mg-card p-8">
+                <h2 class="text-2xl font-black mb-8 italic text-purple-400">Post Photo</h2>
+                <div onclick="document.getElementById('file').click()" class="w-full aspect-square border-2 border-dashed border-white/10 rounded-[45px] flex flex-col items-center justify-center bg-white/[0.01] mb-8">
+                    <i class="fa-solid fa-camera-retro text-6xl text-purple-600 mb-3"></i>
+                    <p class="text-gray-500 text-[10px] font-black uppercase tracking-[3px]">Gallery Select</p>
+                    <input type="file" id="file" class="hidden" accept="image/*" onchange="preview(this)">
+                </div>
+                <img id="pre-img" class="hidden w-full rounded-[35px] mb-6 border border-white/10 aspect-square object-cover shadow-2xl">
+                <input id="post-title" type="text" placeholder="Photo Title Likhein...">
+                <button onclick="publish()" id="p-btn" class="glow-btn">PUBLISH TO WORLD 🚀</button>
+            </div>
+        </section>
+
+        <!-- WALLET SECTION -->
+        <section id="earn" class="page px-6">
+            <div class="bg-gradient-to-br from-[#1e1b4b] to-black p-12 rounded-[55px] text-center border border-white/10 shadow-2xl mb-10">
+                <p class="text-purple-400 text-[11px] font-black uppercase tracking-[5px] mb-4">My Balance</p>
+                <h2 class="text-7xl font-black tracking-tighter">₹<span id="bal">0.00</span></h2>
+                <div class="flex justify-center gap-12 mt-12 border-t border-white/5 pt-10">
+                    <div><b class="text-3xl block" id="vws">0</b><span class="text-[10px] text-gray-500 font-black uppercase">Views</span></div>
+                    <div><b class="text-3xl block text-green-400" id="bon">₹0</b><span class="text-[10px] text-gray-500 font-black uppercase">Bonus</span></div>
+                </div>
+            </div>
+            <div class="mg-card p-8 text-center">
+                <input id="upi" type="text" placeholder="UPI ID for Withdraw">
+                <button id="w-btn" onclick="alert('Withdraw Request Sent to Admin!')" disabled class="glow-btn opacity-20">REQUEST WITHDRAW</button>
+            </div>
+        </section>
+
+        <!-- PROFILE SECTION (FULL VIP SYSTEM) -->
+        <section id="profile" class="page !p-0">
+            <div class="profile-header">
+                <img id="p-banner" src="https://via.placeholder.com/800x400" class="w-full h-full object-cover">
+                <div class="profile-dp">
+                    <img id="p-dp" src="https://via.placeholder.com/150" class="w-full h-full object-cover">
+                </div>
+            </div>
+            
+            <div class="mt-16 px-6 text-center">
+                <h2 id="p-name" class="text-3xl font-black mb-1 flex justify-center items-center tracking-tighter uppercase italic">USER</h2>
+                <p class="text-gray-500 text-xs italic mb-8">Professional Manoj Guna Creator</p>
+
+                <div class="grid grid-cols-3 gap-3 mb-8 bg-white/5 p-5 rounded-[40px] border border-white/5">
+                    <div><b class="text-2xl block" id="p-posts">0</b><span class="text-[9px] text-gray-500 font-bold uppercase">Posts</span></div>
+                    <div><b class="text-2xl block" id="p-foll">0</b><span class="text-[9px] text-gray-500 font-bold uppercase">Followers</span></div>
+                    <div><b class="text-2xl block" id="p-v">0</b><span class="text-[9px] text-gray-500 font-bold uppercase">Views</span></div>
+                </div>
+
+                <!-- 💎 BLUE TICK BUSINESS OFFER -->
+                <div id="buy-tick" class="bg-blue-600/10 border border-blue-500/30 p-5 rounded-3xl mb-8">
+                    <h4 class="text-blue-400 font-black text-xs uppercase mb-2">Buy Verification Tick</h4>
+                    <p class="text-gray-400 text-[10px] mb-4">Price: ₹100 / 1 Year</p>
+                    <button onclick="window.location.href='mailto:manojmanoj74265@gmail.com?subject=Blue Tick&body=My ID Name: '" class="w-full bg-blue-600 p-4 rounded-2xl font-black text-xs">CONTACT: manojmanoj74265@gmail.com</button>
+                </div>
+
+                <!-- 🔒 LOCKED WHATSAPP (9754560120) -->
+                <div class="mb-8">
+                    <button id="contact-btn" onclick="openChat()" class="w-full p-5 rounded-[30px] font-black text-sm locked-btn flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-lock" id="lock-icon"></i> CHAT WITH MANOJ GUNA
+                    </button>
+                    <p id="lock-msg" class="text-[10px] text-red-500 mt-3 font-bold uppercase italic">Locked! Need 5000 Followers to unlock chat.</p>
+                </div>
+
+                <div id="monetize-tag" class="hidden bg-purple-500/10 border border-purple-500/40 p-5 rounded-3xl mb-8">
+                    <p class="text-purple-400 font-black text-[10px] uppercase tracking-widest italic">Verified & Monetized ✅</p>
+                </div>
+
+                <button onclick="auth.signOut().then(()=>location.reload())" class="mt-10 text-red-500 text-[11px] font-black uppercase tracking-[4px]">Sign Out</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- 🧭 NAV BAR -->
+    <nav class="mg-nav">
+        <i onclick="showPage('home')" class="fa-solid fa-house-user text-2xl text-purple-500 n-i" id="i-home"></i>
+        <i onclick="showPage('earn')" class="fa-solid fa-wallet text-2xl text-gray-600 n-i" id="i-earn"></i>
+        <div onclick="showPage('upload')" class="mg-center-btn"><i class="fa-solid fa-plus"></i></div>
+        <i onclick="showPage('profile')" class="fa-solid fa-user-ninja text-2xl text-gray-600 n-i" id="i-profile"></i>
+    </nav>
+
+    <script>
+        // --- ⚙️ FIREBASE ENGINE (manoj-photo-aafec) ---
+        const config = {
+            apiKey: "AIzaSyCaNFZqRqZKlhdKp9p4LGsnGwBok5x6f6g",
+            authDomain: "manoj-photo-aafec.firebaseapp.com",
+            databaseURL: "https://manoj-photo-aafec-default-rtdb.firebaseio.com",
+            projectId: "manoj-photo-aafec",
+            storageBucket: "manoj-photo-aafec.firebasestorage.app",
+            messagingSenderId: "913247187154",
+            appId: "1:913247187154:web:fb30a4300d5c7ffa5b7d0b"
+        };
+        firebase.initializeApp(config);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        let me = null;
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.n-i').forEach(i => i.classList.replace('text-purple-500','text-gray-600'));
+            if(id !== 'upload') document.getElementById('i-'+id).classList.replace('text-gray-600','text-purple-500');
+            window.scrollTo(0,0);
+        }
+
+        async function handleAuth(type) {
+            const e = document.getElementById('auth-email').value;
+            const p = document.getElementById('auth-pass').value;
+            if(!e || !p) return alert("Pehle details bhariye!");
+            try {
+                if(type === 'login') await auth.signInWithEmailAndPassword(e, p);
+                else {
+                    const res = await auth.createUserWithEmailAndPassword(e, p);
+                    await db.collection('users').doc(res.user.uid).set({
+                        uid: res.user.uid, name: e.split('@')[0], wallet: 0, views: 0, followers: 4995, posts: 0, bonus: false, paidBlueTick: false, dp: 'https://via.placeholder.com/150', banner: 'https://via.placeholder.com/800x400'
+                    });
+                }
+            } catch(e) { alert("Error! Pehle 'CREATE NEW ID' par click karein."); }
+        }
+
+        auth.onAuthStateChanged(user => {
+            if(user) { me = user; document.getElementById('auth-screen').style.display = 'none'; startMachine(); }
+            else { document.getElementById('auth-screen').style.display = 'flex'; }
+        });
+
+        function startMachine() {
+            db.collection('users').doc(me.uid).onSnapshot(doc => {
+                const d = doc.data();
+                if(!d) return;
+                document.getElementById('bal').innerText = d.wallet.toFixed(2);
+                document.getElementById('vws').innerText = d.views;
+                document.getElementById('p-v').innerText = d.views;
+                document.getElementById('p-foll').innerText = d.followers;
+                document.getElementById('p-posts').innerText = d.posts || 0;
+                document.getElementById('bon').innerText = d.bonus ? "2000" : "0";
+                document.getElementById('p-name').innerHTML = d.name.toUpperCase() + (d.followers >= 5000 || d.paidBlueTick ? ' <i class="fa-solid fa-circle-check text-blue-500 text-sm"></i>' : '');
+                document.getElementById('p-dp').src = d.dp;
+                document.getElementById('p-banner').src = d.banner;
+
+                if(d.followers >= 5000 || d.paidBlueTick) {
+                    document.getElementById('bt').classList.remove('hidden');
+                    document.getElementById('buy-tick').classList.add('hidden');
+                }
+
+                if(d.followers >= 5000) {
+                    const cBtn = document.getElementById('contact-btn');
+                    cBtn.classList.replace('locked-btn', 'unlocked-btn');
+                    document.getElementById('lock-icon').classList.replace('fa-lock', 'fa-whatsapp');
+                    document.getElementById('lock-msg').innerText = "Verified VIP Access Unlocked!";
+                    document.getElementById('monetize-tag').classList.remove('hidden');
+                    if(!d.bonus) {
+                        db.collection('users').doc(me.uid).update({ wallet: firebase.firestore.FieldValue.increment(2000), bonus: true });
+                        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+                        document.getElementById('bonus-modal').classList.remove('hidden');
+                    }
+                }
+                if(d.wallet >= 2000) { const w = document.getElementById('w-btn'); w.disabled = false; w.classList.remove('opacity-20'); }
+            });
+            loadFeed();
+        }
+
+        function loadFeed() {
+            db.collection('posts').orderBy('time', 'desc').onSnapshot(snap => {
+                const feed = document.getElementById('feed');
+                feed.innerHTML = "";
+                snap.forEach(doc => {
+                    const p = doc.data();
+                    const earnings = (p.views * 0.05).toFixed(2);
+                    feed.innerHTML += `
+                        <div class="mg-card mb-6">
+                            <div class="p-5 flex justify-between items-center">
+                                <b class="text-sm uppercase">${p.uName} ${p.isVip ? '<i class="fa-solid fa-circle-check text-blue-500"></i>' : ''}</b>
+                                <button onclick="follow('${p.uid}')" class="text-[10px] font-black text-purple-400 border border-purple-500/20 px-5 py-2 rounded-full uppercase">Follow</button>
+                            </div>
+                            <img src="${p.img}" class="w-full aspect-square object-cover shadow-2xl" onclick="handleView('${doc.id}', '${p.uid}')">
+                            <div class="p-5">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="flex gap-7 text-2xl text-gray-500">
+                                        <i class="fa-regular fa-heart hover:text-red-500" onclick="if(window.navigator.vibrate) window.navigator.vibrate(40)"></i>
+                                       
